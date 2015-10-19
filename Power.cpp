@@ -32,8 +32,9 @@
 
 // #define LOG_NDEBUG 0
 
-#include "Power.h"
+#include <android-base/file.h>
 #include <log/log.h>
+#include "Power.h"
 #include "power-common.h"
 
 namespace android {
@@ -65,8 +66,16 @@ Return<void> Power::powerHint(PowerHint_1_0 hint, int32_t data) {
     return Void();
 }
 
-Return<void> Power::setFeature(Feature feature, bool activate) {
-    set_feature(static_cast<feature_t>(feature), activate ? 1 : 0);
+Return<void> Power::setFeature(Feature feature, bool activate)  {
+    switch (feature) {
+#ifdef TAP_TO_WAKE_NODE
+        case Feature::POWER_FEATURE_DOUBLE_TAP_TO_WAKE:
+            ::android::base::WriteStringToFile(activate ? "1" : "0", TAP_TO_WAKE_NODE);
+            break;
+#endif
+        default:
+            break;
+    }
     return Void();
 }
 
