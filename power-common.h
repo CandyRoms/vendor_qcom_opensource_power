@@ -54,6 +54,8 @@ extern "C" {
 
 #include <hardware/power.h>
 
+#include "power-feature.h"
+
 enum CPU_GOV_CHECK {
     CPU0 = 0,
     CPU1 = 1,

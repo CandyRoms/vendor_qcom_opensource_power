@@ -15,18 +15,7 @@
  * limitations under the License.
  */
 
-#include <dlfcn.h>
-#include <fcntl.h>
-#include <errno.h>
 #include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-
-#ifdef TAP_TO_WAKE_EVENT_NODE
-#ifndef GENERIC_INPUT_HEADER
-#include <linux/input.h>
-#endif // GENERIC_INPUT_HEADER
-#endif // TAP_TO_WAKE_EVENT_NODE
 
 #include <hardware/power.h>
 #include "power-common.h"
@@ -148,15 +137,4 @@ void set_device_specific_feature(struct power_module *module __unused,
     }
 #endif
 
-#ifdef TAP_TO_WAKE_EVENT_NODE
-    if (feature == POWER_FEATURE_DOUBLE_TAP_TO_WAKE) {
-            int fd = open(TAP_TO_WAKE_EVENT_NODE, O_RDWR);
-            struct input_event ev;
-            ev.type = EV_SYN;
-            ev.code = SYN_CONFIG;
-            ev.value = state ? INPUT_EVENT_WAKUP_MODE_ON : INPUT_EVENT_WAKUP_MODE_OFF;
-            write(fd, &ev, sizeof(ev));
-            close(fd);
-    }
-#endif
 }

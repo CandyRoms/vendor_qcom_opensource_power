@@ -163,7 +163,7 @@ endif
 ifneq ($(TARGET_USES_NON_LEGACY_POWERHAL), true)
 LOCAL_MODULE := power.qcom
 LOCAL_MODULE_TAGS := optional
-LOCAL_CFLAGS += -Wno-unused-parameter -Wno-unused-variable
+LOCAL_CFLAGS += -Wno-unused-parameter -Wno-unused-variable -DLEGACY_QCOM_POWERHAL
 ifneq ($(TARGET_OVERLAYS_POWERHAL), true)
 LOCAL_VENDOR_MODULE := true
 else
