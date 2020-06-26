@@ -251,10 +251,46 @@ static int resources_launch[] = {
 };
 // clang-format on
 
-const int DEFAULT_INTERACTIVE_DURATION = 200; /* ms */
-const int MIN_FLING_DURATION = 1500;          /* ms */
-const int MAX_INTERACTIVE_DURATION = 5000;    /* ms */
-const int MAX_LAUNCH_DURATION = 5000;         /* ms */
+const int kDefaultInteractiveDuration = 200; /* ms */
+const int kMinFlingDuration = 1500;          /* ms */
+const int kMaxInteractiveDuration = 5000;    /* ms */
+const int kMaxLaunchDuration = 5000;         /* ms */
+
+static void process_interaction_hint(void* data) {
+    static struct timespec s_previous_boost_timespec;
+    static int s_previous_duration = 0;
+
+    struct timespec cur_boost_timespec;
+    long long elapsed_time;
+    int duration = kDefaultInteractiveDuration;
+
+    if (data) {
+        int input_duration = *((int*)data);
+        if (input_duration > duration) {
+            duration = (input_duration > kMaxInteractiveDuration) ? kMaxInteractiveDuration
+                                                                  : input_duration;
+        }
+    }
+
+    clock_gettime(CLOCK_MONOTONIC, &cur_boost_timespec);
+
+    elapsed_time = calc_timespan_us(s_previous_boost_timespec, cur_boost_timespec);
+    // don't hint if it's been less than 250ms since last boost
+    // also detect if we're doing anything resembling a fling
+    // support additional boosting in case of flings
+    if (elapsed_time < 250000 && duration <= 750) {
+        return;
+    }
+    s_previous_boost_timespec = cur_boost_timespec;
+    s_previous_duration = duration;
+
+    if (duration >= kMinFlingDuration) {
+        interaction(duration, ARRAY_SIZE(resources_interaction_fling_boost),
+                    resources_interaction_fling_boost);
+    } else {
+        interaction(duration, ARRAY_SIZE(resources_interaction_boost), resources_interaction_boost);
+    }
+}
 
 static int process_activity_launch_hint(void* data) {
     static int launch_handle = -1;

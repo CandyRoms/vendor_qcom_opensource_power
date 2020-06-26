@@ -201,7 +201,32 @@ int power_hint_override(power_hint_t hint, void* data) {
     struct timespec cur_boost_timespec;
     long long elapsed_time;
     static int s_previous_duration = 0;
-    int duration;
+    int duration = kDefaultInteractiveDuration;
+
+    if (data) {
+        int input_duration = *((int*)data);
+        if (input_duration > duration) {
+            duration = (input_duration > kMaxInteractiveDuration) ? kMaxInteractiveDuration
+                                                                  : input_duration;
+        }
+    }
+
+    clock_gettime(CLOCK_MONOTONIC, &cur_boost_timespec);
+
+    elapsed_time = calc_timespan_us(s_previous_boost_timespec, cur_boost_timespec);
+    // don't hint if it's been less than 250ms since last boost
+    // also detect if we're doing anything resembling a fling
+    // support additional boosting in case of flings
+    if (elapsed_time < 250000 && duration <= 750) {
+        return;
+    }
+    s_previous_boost_timespec = cur_boost_timespec;
+    s_previous_duration = duration;
+
+    interaction(duration, ARRAY_SIZE(resources_interaction_boost), resources_interaction_boost);
+}
+
+int power_hint_override(power_hint_t hint, void* data) {
     int ret_val = HINT_NONE;
 
     if (hint == POWER_HINT_SET_PROFILE) {
